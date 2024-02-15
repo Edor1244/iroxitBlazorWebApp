@@ -1,0 +1,252 @@
+﻿@inject HttpClient Http
+@page "/"
+@using BlazorStrap;
+@using System.Data;
+@using iroxitBlazorApp.Shared;
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <PageTitle>DashBoard</PageTitle>
+    <link href="YourAssemblyName.styles.css" rel="stylesheet">
+    <link href="path_to_bootstrap.min.css" rel="stylesheet" integrity="if_needed" />
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to your DashBoard</h1>
+        <div class="row g-2">
+            <div class="col-6">
+                <div class="p-3 border bg-light">
+                    @switch (OpcionTabla)
+                    {
+                        case 'A':
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Id Producto</th>
+                                        <th scope="col">Titulo</th>
+                                        <th scope="col">Descripcion</th>
+                                        <th scope="col">Precio Unitario</th>
+                                        <th scope="col">Existencias</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Productos)
+                                    {
+                                        <tr>
+                                            @foreach (var property in item.GetType().GetProperties())
+                                            {
+                                                <td>@property.GetValue(item)</td>
+                                            }
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                            break;
+                        case 'B':
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">id Ventas</th>
+                                        <th scope="col">idProductos</th>
+                                        <th scope="col">Cantidad Vendida</th>
+                                        <th scope="col">Fecha</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Ventas)
+                                    {
+                                        <tr>
+                                            <th>@item.IDVentas</th>
+                                            <th>@item.IDProductos</th>
+                                            <th>@item.CantidadVendida</th>
+                                            <th>@item.Fecha</th>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                            break;
+                        case 'C':
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">idProductos</th>
+                                        <th scope="col">id Ventas</th>
+                                        <th scope="col">Cantidad Vendida</th>
+                                        <th scope="col">Fecha</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in VentasPorProducto)
+                                    {
+                                        <tr>
+                                            <th>@item.IDProductos</th>
+                                            <th>@item.IDVentas</th>
+                                            <th>@item.CantidadVendida</th>
+                                            <th>@item.Fecha</th>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                            break;
+                        case 'D':
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Id Producto</th>
+                                        <th scope="col">Titulo</th>
+                                        <th scope="col">Descripcion</th>
+                                        <th scope="col">Precio Unitario</th>
+                                        <th scope="col">Existencias</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in ProductosMasVendidos)
+                                    {
+                                        <tr>
+                                            @foreach (var property in item.GetType().GetProperties())
+                                            {
+                                                <td>@property.GetValue(item)</td>
+                                            }
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                            break;
+                        case 'E':
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Cantidad de Productos Existentes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in ProductosExistentes)
+                                    {
+                                        <tr>
+                                            <th>@item</th>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                            break;
+                    }
+                </div>
+            </div>
+            <div class="col-6 border bg-light">
+                <div class="p-3">
+                    <BSDropdown IsDark="true">
+                        <Toggler>
+                            <BSToggle IsButton="true" Color="BSColor.Secondary">Selecciona tipo vista</BSToggle>
+                        </Toggler>
+                        <Content>
+                            <BSDropdownItem @onclick="() => CargarProductos('A')">Productos</BSDropdownItem>
+                            <BSDropdownItem @onclick="() => CargarProductos('B')">Ventas</BSDropdownItem>
+                            <BSDropdownItem @onclick="() => ActTxtBusVenPorId()">Ventas por Producto</BSDropdownItem>
+                            <BSDropdownItem @onclick="() => CargarProductos('D')">Articulos mas Vendidos</BSDropdownItem> 
+                            <BSDropdownItem @onclick="() => CargarProductos('E')">Productos existentes</BSDropdownItem> 
+                        </Content>
+                    </BSDropdown>
+                    @if (ActivarTxtBvxp)
+                    {
+                        <div>
+                            <input type="number" @bind="productoIdBvxps" />
+                            <button @onclick="() => CargarVentasPorProducto(productoIdBvxps)" onreset="true">Realizar Busqueda</button>
+                            <ol>
+                                <li>Maestro Limpio 1L</li>
+                                <li>Cloralex 1L.</li>
+                                <li>Cloralex Pastillas 10 Unidades</li>
+                                <li>Pinol 1L.</li>
+                                <li>Siempre Limpio 300 Bolsas.</li>
+                                <li>El Reluciente. 2 Kilos.</li>
+                                <li>El suavecito. Paquete 4 rollos.</li>
+                                <li>Cesto Papelero. Capacidad de 1L cúbico</li>
+                                <li>Toallitas Resplandor. Paquete 70 toallitas.</li>
+                            </ol>
+
+                        </div>
+                    }
+                    
+                </div>
+
+            </div>
+            <div class="col-6">
+                <div class="p-3 border bg-light">Parte del Botton de Exit</div>
+            </div>
+            <div class="col-6">
+                <div class="p-3 border bg-light">Custom column padding
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="_content/BlazorStrap/popper.min.js"></script>
+    <script src="_content/BlazorStrap/blazorstrap.js"></script>
+</body>
+</html>
+
+@code
+{
+
+    public static List<Producto> Productos = new List<Producto>();
+    public static List<Venta> Ventas = new List<Venta>();
+    public static List<Venta> VentasPorProducto = new List<Venta>();
+    public static List<Producto> ProductosMasVendidos = new List<Producto>();
+    public static string ProductosExistentes = string.Empty;
+    public static string productoIdBvxps = string.Empty;
+    public static char OpcionTabla = default(char);
+    public static bool ActivarTxtBvxp = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Productos = await Http.GetFromJsonAsync<List<Producto>>("api/Producto");
+        OpcionTabla = 'A';
+    }
+
+    public async Task ActTxtBusVenPorId()
+    {
+        ActivarTxtBvxp = true;
+    }
+
+    public async Task CargarProductos(char Option)
+    {
+        ActivarTxtBvxp = false;
+
+        switch (Option)
+        {
+            case 'A':
+                OpcionTabla = 'A';
+                Productos = await Http.GetFromJsonAsync<List<Producto>>("api/Producto");
+                StateHasChanged();
+                break;
+            case 'B':
+                OpcionTabla = 'B';
+                Ventas = await Http.GetFromJsonAsync<List<Venta>>("api/Venta");
+                StateHasChanged();
+                break;
+            case 'D':
+                OpcionTabla = 'D';
+                ProductosMasVendidos = await Http.GetFromJsonAsync<List<Producto>>("api/Venta/GetProductoMasVendido");
+                StateHasChanged();
+                break;
+            case 'E':
+                OpcionTabla = 'E';
+                ProductosExistentes = await Http.GetStringAsync("api/Producto/GetProductosExistentes");
+                StateHasChanged();
+                break;
+        }
+    }
+
+    public async Task CargarVentasPorProducto(string productoIdBvxp)
+    {
+        OpcionTabla = 'C';
+        int productoIDNumber = Int32.Parse(productoIdBvxp);
+        VentasPorProducto = await Http.GetFromJsonAsync<List<Venta>>($"api/Venta/GetVentaPerProduct/{productoIDNumber}");
+        StateHasChanged();
+    }
+}
+
+
+
+
