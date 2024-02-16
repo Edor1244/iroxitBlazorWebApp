@@ -16,6 +16,10 @@
 <body>
     <div class="container">
         <h1>Welcome to your DashBoard</h1>
+        <BSAlert Color="BSColor.Info" IsVisible="@mostrarAlerta">
+            @mensajeAlerta
+        </BSAlert>
+
         <div class="row g-2">
             <div class="col-6">
                 <div class="p-3 border bg-light">
@@ -155,17 +159,11 @@
                             <input type="number" @bind="productoIdBvxps" />
                             <button @onclick="() => CargarVentasPorProducto(productoIdBvxps)" onreset="true">Realizar Busqueda</button>
                             <ol>
-                                <li>Maestro Limpio 1L</li>
-                                <li>Cloralex 1L.</li>
-                                <li>Cloralex Pastillas 10 Unidades</li>
-                                <li>Pinol 1L.</li>
-                                <li>Siempre Limpio 300 Bolsas.</li>
-                                <li>El Reluciente. 2 Kilos.</li>
-                                <li>El suavecito. Paquete 4 rollos.</li>
-                                <li>Cesto Papelero. Capacidad de 1L cúbico</li>
-                                <li>Toallitas Resplandor. Paquete 70 toallitas.</li>
+                                @foreach (var item in ProductosExistentesTitulos)
+                                {
+                                    <li>@item</li>
+                                }
                             </ol>
-
                         </div>
                     }
                     
@@ -190,28 +188,32 @@
 {
 
     public static List<Producto> Productos = new List<Producto>();
-    public static List<Venta> Ventas = new List<Venta>();
-    public static List<Venta> VentasPorProducto = new List<Venta>();
+    public static List<Venta> Ventas = new List<Venta>(), validarProductoenVentas = new List<Venta>(), VentasPorProducto = new List<Venta>();
     public static List<Producto> ProductosMasVendidos = new List<Producto>();
-    public static string ProductosExistentes = string.Empty;
-    public static string productoIdBvxps = string.Empty;
+    public static List<string> ProductosExistentesTitulos = new List<string>(), ProductosExistentes = new List<string>();
+    public static string mensajeAlerta = string.Empty, productoIdBvxps = string.Empty;
     public static char OpcionTabla = default(char);
-    public static bool ActivarTxtBvxp = false;
+    public static bool ActivarTxtBvxp = false, mostrarAlerta = false;
+
 
     protected override async Task OnInitializedAsync()
     {
-        Productos = await Http.GetFromJsonAsync<List<Producto>>("api/Producto");
+
+        await CargarProductos('A');
         OpcionTabla = 'A';
     }
 
     public async Task ActTxtBusVenPorId()
     {
+        ProductosExistentesTitulos = await Http.GetFromJsonAsync<List<string>>("api/Producto/ProductosExistentesTitulos");
         ActivarTxtBvxp = true;
+        StateHasChanged();
     }
 
     public async Task CargarProductos(char Option)
     {
         ActivarTxtBvxp = false;
+        await NotificarProductosBajosEnExistencia();
 
         switch (Option)
         {
@@ -232,7 +234,7 @@
                 break;
             case 'E':
                 OpcionTabla = 'E';
-                ProductosExistentes = await Http.GetStringAsync("api/Producto/GetProductosExistentes");
+                ProductosExistentes = await Http.GetFromJsonAsync<List<string>>("api/Producto/ProductosExistentesTitulos");
                 StateHasChanged();
                 break;
         }
@@ -242,8 +244,31 @@
     {
         OpcionTabla = 'C';
         int productoIDNumber = Int32.Parse(productoIdBvxp);
-        VentasPorProducto = await Http.GetFromJsonAsync<List<Venta>>($"api/Venta/GetVentaPerProduct/{productoIDNumber}");
+        try
+        {
+            VentasPorProducto = await Http.GetFromJsonAsync<List<Venta>>($"api/Venta/GetVentaPerProduct/{productoIDNumber}");
+        }
+        catch
+        {
+            mensajeAlerta = "Producto sin Ventas";
+        }
+
         StateHasChanged();
+    }
+    private async Task NotificarProductosBajosEnExistencia()
+    {
+        var lowStockProducts = await Http.GetFromJsonAsync<List<Producto>>("api/Producto/GetProductoStockBajo");
+
+        if (lowStockProducts != null && lowStockProducts.Any())
+        {
+            string productosFaltantesTitulos = string.Join("\n", lowStockProducts.Select(producto => producto.Titulo));
+            mensajeAlerta = $"Productos que necesitan reabastecimiento:\n\n{productosFaltantesTitulos}";
+            mostrarAlerta = true;
+        }
+        else
+        {
+            mostrarAlerta = false;
+        }
     }
 }
 

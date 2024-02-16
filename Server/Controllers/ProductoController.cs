@@ -23,8 +23,20 @@ namespace iroxitBlazorApp.Server.Controllers
         public async Task<ActionResult<List<Producto>>> GetProducto()
         {
             var lista = await _context.Productos.ToListAsync();
-            return Ok(lista);
+            return Ok(lista); 
         }
+
+        [HttpGet]
+        [Route("ProductosExistentesTitulos")]
+        public async Task<ActionResult<List<string>>> GetProductoTitulos()
+        {
+            var titulos = await _context.Productos
+                .Select(producto => producto.Titulo)
+                .ToListAsync();
+
+            return Ok(titulos);
+        }
+
 
 
         [HttpGet]
@@ -48,24 +60,7 @@ namespace iroxitBlazorApp.Server.Controllers
             return await _context.Productos.ToListAsync();
         }
 
-        [HttpGet]
-        [Route("GetProductosExistentes")]
-        public async Task<ActionResult<int>> GetProductosExistentes()
-        {
-            try
-            {
-                // Efficiently count products using CountAsync()
-                var productCount = await _context.Productos.CountAsync();
 
-                return Ok(productCount);
-            }
-            catch (Exception ex)
-            {
-                // Handle potential exceptions gracefully
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new { message = "An error occurred while retrieving product count.", error = ex.Message });
-            }
-        }
         [HttpGet]
         [Route("GetProductoStockBajo")]
         public async Task<ActionResult<List<Producto>>> GetProductoStockBajo()
